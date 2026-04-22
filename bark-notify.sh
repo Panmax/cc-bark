@@ -16,9 +16,11 @@ BARK_ICON="${BARK_ICON:-}"
 if command -v jq > /dev/null 2>&1; then
   EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // "Unknown"')
   CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+  SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""')
 else
   EVENT="Unknown"
   CWD=""
+  SESSION_ID=""
 fi
 
 PROJECT=$(basename "$CWD")
@@ -39,6 +41,10 @@ case "$EVENT" in
 esac
 
 BODY="${PROJECT:-Claude Code}"
+if [ -n "$SESSION_ID" ]; then
+  SHORT_ID="${SESSION_ID:0:8}"
+  BODY="${BODY} (${SHORT_ID})"
+fi
 
 if command -v jq > /dev/null 2>&1; then
   PAYLOAD=$(jq -n \

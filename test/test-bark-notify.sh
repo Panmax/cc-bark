@@ -57,8 +57,8 @@ test_stop_event_sends_correct_payload() {
     return 1
   fi
 
-  # Check body contains project name
-  if ! echo "$body" | jq -e '.body == "my-app"' > /dev/null 2>&1; then
+  # Check body contains project name and session id
+  if ! echo "$body" | jq -e '.body == "my-app (abc123)"' > /dev/null 2>&1; then
     echo "FAIL: body mismatch. Body: $body"
     cleanup
     return 1
@@ -96,7 +96,7 @@ test_notification_event_sends_time_sensitive() {
     return 1
   fi
 
-  if ! echo "$body" | jq -e '.body == "web-api"' > /dev/null 2>&1; then
+  if ! echo "$body" | jq -e '.body == "web-api (def456)"' > /dev/null 2>&1; then
     echo "FAIL: body mismatch. Body: $body"
     cleanup
     return 1
