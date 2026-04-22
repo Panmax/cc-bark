@@ -1,15 +1,17 @@
 # Bark Notification Hook for Claude Code
 
-Get push notifications on your iPhone via [Bark](https://bark.day.app) when Claude Code finishes a task or needs your input.
+[English](README.md) | [中文](README_zh.md)
+
+Get push notifications on your Apple devices via [Bark](https://bark.day.app) when Claude Code finishes a task or needs your input.
 
 ## Quick Start
 
-1. Install the [Bark app](https://apps.apple.com/us/app/bark-push-notifications/id1403753865) on your iPhone
+1. Install the [Bark app](https://apps.apple.com/us/app/bark-push-notifications/id1403753865) on your iPhone or Mac
 2. Copy your device key from the app
 3. Run the installer:
 
 ```bash
-git clone https://github.com/nicr9/cc-bark.git
+git clone https://github.com/Panmax/cc-bark.git
 cd cc-bark
 BARK_DEVICE_KEY="your-device-key" bash install.sh
 ```
@@ -106,7 +108,7 @@ echo '{"hook_event_name":"Stop","cwd":"/tmp/test-project"}' | BARK_DEVICE_KEY="y
 
 - macOS or Linux with `curl`
 - `jq` recommended (falls back to basic notifications without it)
-- [Bark app](https://apps.apple.com/us/app/bark-push-notifications/id1403753865) on your iPhone
+- [Bark app](https://apps.apple.com/us/app/bark-push-notifications/id1403753865) on your iPhone or Mac
 
 ## License
 
