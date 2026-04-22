@@ -31,7 +31,7 @@ test_stop_event_sends_correct_payload() {
   mock_curl_setup
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
-  echo "$input" | BARK_DEVICE_KEY="test-key-123" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+  echo "$input" | HOME="$TMPDIR_TEST" BARK_DEVICE_KEY="test-key-123" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
 
   # Verify curl was called
   if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
@@ -79,7 +79,7 @@ test_notification_event_sends_time_sensitive() {
   mock_curl_setup
   local input='{"hook_event_name":"Notification","cwd":"/Users/me/projects/web-api","session_id":"def456"}'
 
-  echo "$input" | BARK_DEVICE_KEY="test-key-123" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+  echo "$input" | HOME="$TMPDIR_TEST" BARK_DEVICE_KEY="test-key-123" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
 
   if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
     echo "FAIL: curl was not called"
@@ -117,6 +117,7 @@ test_custom_sound_and_group() {
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
   echo "$input" | \
+    HOME="$TMPDIR_TEST" \
     BARK_DEVICE_KEY="test-key-123" \
     BARK_SOUND="alarm" \
     BARK_GROUP="work" \
@@ -153,6 +154,7 @@ test_custom_icon_included_in_payload() {
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
   echo "$input" | \
+    HOME="$TMPDIR_TEST" \
     BARK_DEVICE_KEY="test-key-123" \
     BARK_ICON="https://example.com/icon.png" \
     PATH="$TMPDIR_TEST/bin:$PATH" \
@@ -182,6 +184,7 @@ test_no_icon_when_not_set() {
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
   echo "$input" | \
+    HOME="$TMPDIR_TEST" \
     BARK_DEVICE_KEY="test-key-123" \
     BARK_ICON="" \
     PATH="$TMPDIR_TEST/bin:$PATH" \
@@ -210,7 +213,7 @@ test_missing_device_key_exits_silently() {
   mock_curl_setup
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
-  echo "$input" | BARK_DEVICE_KEY="" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+  echo "$input" | HOME="$TMPDIR_TEST" BARK_DEVICE_KEY="" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
   local exit_code=$?
 
   if [ "$exit_code" -ne 0 ]; then
@@ -233,7 +236,7 @@ test_unset_device_key_exits_silently() {
   mock_curl_setup
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
-  echo "$input" | env -u BARK_DEVICE_KEY PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+  echo "$input" | env -u BARK_DEVICE_KEY HOME="$TMPDIR_TEST" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
   local exit_code=$?
 
   if [ "$exit_code" -ne 0 ]; then
@@ -244,6 +247,73 @@ test_unset_device_key_exits_silently() {
 
   if [ -f "$TMPDIR_TEST/curl_body" ]; then
     echo "FAIL: curl should NOT have been called"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
+
+test_reads_device_key_from_config_file() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  # Create a fake HOME with config file
+  local fake_home="$TMPDIR_TEST/fakehome"
+  mkdir -p "$fake_home/.claude/hooks"
+  echo 'BARK_DEVICE_KEY="from-config-file"' > "$fake_home/.claude/hooks/bark-notify.conf"
+
+  echo "$input" | \
+    env -u BARK_DEVICE_KEY \
+    HOME="$fake_home" \
+    PATH="$TMPDIR_TEST/bin:$PATH" \
+    bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  if ! echo "$body" | jq -e '.device_key == "from-config-file"' > /dev/null 2>&1; then
+    echo "FAIL: device_key should come from config file. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
+
+test_env_var_overrides_config_file() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  local fake_home="$TMPDIR_TEST/fakehome"
+  mkdir -p "$fake_home/.claude/hooks"
+  echo 'BARK_DEVICE_KEY="from-config-file"' > "$fake_home/.claude/hooks/bark-notify.conf"
+
+  echo "$input" | \
+    HOME="$fake_home" \
+    BARK_DEVICE_KEY="from-env-var" \
+    PATH="$TMPDIR_TEST/bin:$PATH" \
+    bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  if ! echo "$body" | jq -e '.device_key == "from-env-var"' > /dev/null 2>&1; then
+    echo "FAIL: env var should override config file. Body: $body"
     cleanup
     return 1
   fi
@@ -264,6 +334,7 @@ test_jq_missing_sends_generic_notification() {
   local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
 
   echo "$input" | \
+    HOME="$TMPDIR_TEST" \
     BARK_DEVICE_KEY="test-key-123" \
     PATH="$no_jq_path:/bin:/usr/bin" \
     /bin/bash "$HOOK_SCRIPT"

@@ -92,16 +92,21 @@ else
 fi
 echo "✓ Hooks configured"
 
-# Suggest env var setup
+# Write config file
+CONF_FILE="$HOOK_DIR/bark-notify.conf"
 echo ""
-echo "Add this to your shell profile (~/.zshrc or ~/.bashrc):"
+echo "Writing config to $CONF_FILE ..."
+cat > "$CONF_FILE" << EOF
+BARK_DEVICE_KEY="${BARK_DEVICE_KEY}"
+# BARK_SOUND="multiwayinvitation"
+# BARK_GROUP="claude-code"
+# BARK_SERVER="https://api.day.app"
+# BARK_ICON=""
+EOF
+echo "✓ Config saved"
 echo ""
-echo "  export BARK_DEVICE_KEY=\"$BARK_DEVICE_KEY\""
-echo ""
-echo "Optional configuration:"
-echo "  export BARK_SOUND=\"multiwayinvitation\"   # notification sound"
-echo "  export BARK_GROUP=\"claude-code\"           # notification group"
-echo "  export BARK_SERVER=\"https://api.day.app\"  # Bark server URL"
+echo "To change settings later, edit: $CONF_FILE"
+echo "(Environment variables override config file values)"
 echo ""
 
 # Send test notification

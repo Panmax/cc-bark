@@ -3,6 +3,21 @@ set -uo pipefail
 
 INPUT=$(cat)
 
+CONF_FILE="${HOME}/.claude/hooks/bark-notify.conf"
+if [ -f "$CONF_FILE" ]; then
+  _pre_key="${BARK_DEVICE_KEY:-}"
+  _pre_server="${BARK_SERVER:-}"
+  _pre_sound="${BARK_SOUND:-}"
+  _pre_group="${BARK_GROUP:-}"
+  _pre_icon="${BARK_ICON:-}"
+  source "$CONF_FILE"
+  [ -n "$_pre_key" ] && BARK_DEVICE_KEY="$_pre_key"
+  [ -n "$_pre_server" ] && BARK_SERVER="$_pre_server"
+  [ -n "$_pre_sound" ] && BARK_SOUND="$_pre_sound"
+  [ -n "$_pre_group" ] && BARK_GROUP="$_pre_group"
+  [ -n "$_pre_icon" ] && BARK_ICON="$_pre_icon"
+fi
+
 BARK_DEVICE_KEY="${BARK_DEVICE_KEY:-}"
 if [ -z "$BARK_DEVICE_KEY" ]; then
   exit 0
