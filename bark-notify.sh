@@ -7,13 +7,11 @@ CONF_FILE="${HOME}/.claude/hooks/bark-notify.conf"
 if [ -f "$CONF_FILE" ]; then
   _pre_key="${BARK_DEVICE_KEY:-}"
   _pre_server="${BARK_SERVER:-}"
-  _pre_sound="${BARK_SOUND:-}"
   _pre_group="${BARK_GROUP:-}"
   _pre_icon="${BARK_ICON:-}"
   source "$CONF_FILE"
   [ -n "$_pre_key" ] && BARK_DEVICE_KEY="$_pre_key"
   [ -n "$_pre_server" ] && BARK_SERVER="$_pre_server"
-  [ -n "$_pre_sound" ] && BARK_SOUND="$_pre_sound"
   [ -n "$_pre_group" ] && BARK_GROUP="$_pre_group"
   [ -n "$_pre_icon" ] && BARK_ICON="$_pre_icon"
 fi
@@ -24,7 +22,6 @@ if [ -z "$BARK_DEVICE_KEY" ]; then
 fi
 
 BARK_SERVER="${BARK_SERVER:-https://api.day.app}"
-BARK_SOUND="${BARK_SOUND:-multiwayinvitation}"
 BARK_GROUP="${BARK_GROUP:-claude-code}"
 BARK_ICON="${BARK_ICON:-}"
 
@@ -67,7 +64,6 @@ if command -v jq > /dev/null 2>&1; then
     --arg title "$TITLE" \
     --arg body "$BODY" \
     --arg group "$BARK_GROUP" \
-    --arg sound "$BARK_SOUND" \
     --arg level "$LEVEL" \
     --arg icon "$BARK_ICON" \
     '{
@@ -75,12 +71,11 @@ if command -v jq > /dev/null 2>&1; then
       title: $title,
       body: $body,
       group: $group,
-      sound: $sound,
       level: $level
     } + (if $icon != "" then {icon: $icon} else {} end)'
   )
 else
-  PAYLOAD="{\"device_key\":\"${BARK_DEVICE_KEY}\",\"title\":\"${TITLE}\",\"body\":\"${BODY}\",\"group\":\"${BARK_GROUP}\",\"sound\":\"${BARK_SOUND}\",\"level\":\"${LEVEL}\"}"
+  PAYLOAD="{\"device_key\":\"${BARK_DEVICE_KEY}\",\"title\":\"${TITLE}\",\"body\":\"${BODY}\",\"group\":\"${BARK_GROUP}\",\"level\":\"${LEVEL}\"}"
 fi
 
 curl -s -S --fail-with-body \

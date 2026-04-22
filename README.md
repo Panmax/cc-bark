@@ -16,13 +16,7 @@ cd cc-bark
 BARK_DEVICE_KEY="your-device-key" bash install.sh
 ```
 
-4. Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
-
-```bash
-export BARK_DEVICE_KEY="your-device-key"
-```
-
-5. Restart Claude Code — you'll get notifications automatically.
+4. Restart Claude Code — you'll get notifications automatically.
 
 ## What You'll Get
 
@@ -40,7 +34,6 @@ Set these environment variables to customize behavior:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BARK_DEVICE_KEY` | *(required)* | Your Bark device key |
-| `BARK_SOUND` | `multiwayinvitation` | Notification sound |
 | `BARK_GROUP` | `claude-code` | Notification grouping |
 | `BARK_SERVER` | `https://api.day.app` | Bark server URL (for self-hosted) |
 | `BARK_ICON` | *(none)* | Custom notification icon URL |

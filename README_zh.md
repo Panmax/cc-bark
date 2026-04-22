@@ -16,13 +16,7 @@ cd cc-bark
 BARK_DEVICE_KEY="你的设备密钥" bash install.sh
 ```
 
-4. 将以下内容添加到你的 Shell 配置文件（`~/.zshrc` 或 `~/.bashrc`）：
-
-```bash
-export BARK_DEVICE_KEY="你的设备密钥"
-```
-
-5. 重启 Claude Code，之后你将自动收到通知。
+4. 重启 Claude Code，之后你将自动收到通知。
 
 ## 通知效果
 
@@ -40,7 +34,6 @@ export BARK_DEVICE_KEY="你的设备密钥"
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `BARK_DEVICE_KEY` | *（必填）* | Bark 设备密钥 |
-| `BARK_SOUND` | `multiwayinvitation` | 通知提示音 |
 | `BARK_GROUP` | `claude-code` | 通知分组名称 |
 | `BARK_SERVER` | `https://api.day.app` | Bark 服务器地址（自建服务器时使用） |
 | `BARK_ICON` | *（无）* | 自定义通知图标 URL |

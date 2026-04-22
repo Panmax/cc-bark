@@ -98,7 +98,6 @@ echo ""
 echo "Writing config to $CONF_FILE ..."
 cat > "$CONF_FILE" << EOF
 BARK_DEVICE_KEY="${BARK_DEVICE_KEY}"
-# BARK_SOUND="multiwayinvitation"
 # BARK_GROUP="claude-code"
 # BARK_SERVER="https://api.day.app"
 # BARK_ICON=""
@@ -114,7 +113,7 @@ echo "Sending test notification..."
 BARK_SERVER="${BARK_SERVER:-https://api.day.app}"
 RESULT=$(curl -s --max-time 5 \
   -H "Content-Type: application/json" \
-  -d "{\"device_key\":\"${BARK_DEVICE_KEY}\",\"title\":\"Claude Code\",\"body\":\"Bark notifications configured successfully!\",\"group\":\"claude-code\",\"sound\":\"${BARK_SOUND:-multiwayinvitation}\"}" \
+  -d "{\"device_key\":\"${BARK_DEVICE_KEY}\",\"title\":\"Claude Code\",\"body\":\"Bark notifications configured successfully!\",\"group\":\"claude-code\"}" \
   "${BARK_SERVER}/push" 2>&1) || true
 
 if echo "$RESULT" | grep -q '"code":200' 2>/dev/null; then
