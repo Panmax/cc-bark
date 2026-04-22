@@ -205,3 +205,49 @@ test_no_icon_when_not_set() {
   cleanup
   return 0
 }
+
+test_missing_device_key_exits_silently() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  echo "$input" | BARK_DEVICE_KEY="" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+  local exit_code=$?
+
+  if [ "$exit_code" -ne 0 ]; then
+    echo "FAIL: expected exit 0, got $exit_code"
+    cleanup
+    return 1
+  fi
+
+  if [ -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl should NOT have been called"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
+
+test_unset_device_key_exits_silently() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  echo "$input" | env -u BARK_DEVICE_KEY PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+  local exit_code=$?
+
+  if [ "$exit_code" -ne 0 ]; then
+    echo "FAIL: expected exit 0, got $exit_code"
+    cleanup
+    return 1
+  fi
+
+  if [ -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl should NOT have been called"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
