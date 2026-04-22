@@ -111,3 +111,97 @@ test_notification_event_sends_time_sensitive() {
   cleanup
   return 0
 }
+
+test_custom_sound_and_group() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  echo "$input" | \
+    BARK_DEVICE_KEY="test-key-123" \
+    BARK_SOUND="alarm" \
+    BARK_GROUP="work" \
+    PATH="$TMPDIR_TEST/bin:$PATH" \
+    bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  if ! echo "$body" | jq -e '.sound == "alarm"' > /dev/null 2>&1; then
+    echo "FAIL: sound mismatch. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  if ! echo "$body" | jq -e '.group == "work"' > /dev/null 2>&1; then
+    echo "FAIL: group mismatch. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
+
+test_custom_icon_included_in_payload() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  echo "$input" | \
+    BARK_DEVICE_KEY="test-key-123" \
+    BARK_ICON="https://example.com/icon.png" \
+    PATH="$TMPDIR_TEST/bin:$PATH" \
+    bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  if ! echo "$body" | jq -e '.icon == "https://example.com/icon.png"' > /dev/null 2>&1; then
+    echo "FAIL: icon mismatch. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
+
+test_no_icon_when_not_set() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  echo "$input" | \
+    BARK_DEVICE_KEY="test-key-123" \
+    BARK_ICON="" \
+    PATH="$TMPDIR_TEST/bin:$PATH" \
+    bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  if echo "$body" | jq -e 'has("icon")' > /dev/null 2>&1; then
+    echo "FAIL: icon should not be present. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
