@@ -13,8 +13,14 @@ BARK_SOUND="${BARK_SOUND:-multiwayinvitation}"
 BARK_GROUP="${BARK_GROUP:-claude-code}"
 BARK_ICON="${BARK_ICON:-}"
 
-EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // "Unknown"')
-CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+if command -v jq > /dev/null 2>&1; then
+  EVENT=$(echo "$INPUT" | jq -r '.hook_event_name // "Unknown"')
+  CWD=$(echo "$INPUT" | jq -r '.cwd // ""')
+else
+  EVENT="Unknown"
+  CWD=""
+fi
+
 PROJECT=$(basename "$CWD")
 
 case "$EVENT" in
@@ -34,23 +40,27 @@ esac
 
 BODY="${PROJECT:-Claude Code}"
 
-PAYLOAD=$(jq -n \
-  --arg device_key "$BARK_DEVICE_KEY" \
-  --arg title "$TITLE" \
-  --arg body "$BODY" \
-  --arg group "$BARK_GROUP" \
-  --arg sound "$BARK_SOUND" \
-  --arg level "$LEVEL" \
-  --arg icon "$BARK_ICON" \
-  '{
-    device_key: $device_key,
-    title: $title,
-    body: $body,
-    group: $group,
-    sound: $sound,
-    level: $level
-  } + (if $icon != "" then {icon: $icon} else {} end)'
-)
+if command -v jq > /dev/null 2>&1; then
+  PAYLOAD=$(jq -n \
+    --arg device_key "$BARK_DEVICE_KEY" \
+    --arg title "$TITLE" \
+    --arg body "$BODY" \
+    --arg group "$BARK_GROUP" \
+    --arg sound "$BARK_SOUND" \
+    --arg level "$LEVEL" \
+    --arg icon "$BARK_ICON" \
+    '{
+      device_key: $device_key,
+      title: $title,
+      body: $body,
+      group: $group,
+      sound: $sound,
+      level: $level
+    } + (if $icon != "" then {icon: $icon} else {} end)'
+  )
+else
+  PAYLOAD="{\"device_key\":\"${BARK_DEVICE_KEY}\",\"title\":\"${TITLE}\",\"body\":\"${BODY}\",\"group\":\"${BARK_GROUP}\",\"sound\":\"${BARK_SOUND}\",\"level\":\"${LEVEL}\"}"
+fi
 
 curl -s -S --fail-with-body \
   --max-time 5 \

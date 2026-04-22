@@ -251,3 +251,46 @@ test_unset_device_key_exits_silently() {
   cleanup
   return 0
 }
+
+test_jq_missing_sends_generic_notification() {
+  mock_curl_setup
+
+  # Create a fake jq that "doesn't exist" by removing it from PATH
+  # We do this by creating a PATH with only our mock curl dir and standard dirs minus jq
+  local no_jq_path="$TMPDIR_TEST/bin"
+  # Ensure no jq in our mock bin
+  rm -f "$TMPDIR_TEST/bin/jq"
+
+  local input='{"hook_event_name":"Stop","cwd":"/Users/me/projects/my-app","session_id":"abc123"}'
+
+  echo "$input" | \
+    BARK_DEVICE_KEY="test-key-123" \
+    PATH="$no_jq_path:/bin:/usr/bin" \
+    /bin/bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  # Should contain device_key
+  if ! echo "$body" | grep -q "test-key-123"; then
+    echo "FAIL: device_key not in payload. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  # Should contain some title
+  if ! echo "$body" | grep -q "Claude Code"; then
+    echo "FAIL: title not in payload. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
