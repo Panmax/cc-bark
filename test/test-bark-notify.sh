@@ -74,3 +74,40 @@ test_stop_event_sends_correct_payload() {
   cleanup
   return 0
 }
+
+test_notification_event_sends_time_sensitive() {
+  mock_curl_setup
+  local input='{"hook_event_name":"Notification","cwd":"/Users/me/projects/web-api","session_id":"def456"}'
+
+  echo "$input" | BARK_DEVICE_KEY="test-key-123" PATH="$TMPDIR_TEST/bin:$PATH" bash "$HOOK_SCRIPT"
+
+  if [ ! -f "$TMPDIR_TEST/curl_body" ]; then
+    echo "FAIL: curl was not called"
+    cleanup
+    return 1
+  fi
+
+  local body
+  body=$(cat "$TMPDIR_TEST/curl_body")
+
+  if ! echo "$body" | jq -e '.title == "Claude Code: Needs Input"' > /dev/null 2>&1; then
+    echo "FAIL: title mismatch. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  if ! echo "$body" | jq -e '.body == "web-api"' > /dev/null 2>&1; then
+    echo "FAIL: body mismatch. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  if ! echo "$body" | jq -e '.level == "timeSensitive"' > /dev/null 2>&1; then
+    echo "FAIL: level mismatch. Body: $body"
+    cleanup
+    return 1
+  fi
+
+  cleanup
+  return 0
+}
